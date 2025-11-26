@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  simplegslb:
+  - apiVersion: v2
+    appVersion: 0.1.0
+    created: "2025-11-26T12:12:59.272136166Z"
+    description: Simple GSLB solution using CoreDNS
+    digest: 9557194355c74895e2277f4fd80a9f7a8295a2b44ecaf67ffbffc85405efa3f0
+    name: simplegslb
+    type: application
+    urls:
+    - https://github.com/cyberun-cloud/simple-gslb/releases/download/simplegslb-0.1.0/simplegslb-0.1.0.tgz
+    version: 0.1.0
+generated: "2025-11-26T12:12:59.272334908Z"

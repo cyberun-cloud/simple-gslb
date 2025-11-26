@@ -63,7 +63,7 @@ spec:
       containers:
         {{- if eq .Values.mode "controller" }}
         - name: simplegslb-controller
-          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: MODE

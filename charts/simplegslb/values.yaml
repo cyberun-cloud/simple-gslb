@@ -3,8 +3,8 @@ interval: 10
 timeout: 2
 
 image:
-  repository: myrepo/simplegslb
-  tag: latest
+  repository: ghcr.io/cyberun-cloud/simple-gslb
+  # tag: latest
   pullPolicy: IfNotPresent
 
 service:

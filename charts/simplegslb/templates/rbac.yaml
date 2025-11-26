@@ -1,0 +1,28 @@
+{{- if eq .Values.mode "controller" }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: simplegslb-{{ .Release.Name }}-sa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: simplegslb-{{ .Release.Name }}-controller-cr
+rules:
+  - apiGroups: ["cyberun.cloud"]
+    resources: ["gslbconfigs"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: simplegslb-{{ .Release.Name }}-controller-crb
+subjects:
+  - kind: ServiceAccount
+    name: simplegslb-{{ .Release.Name }}-sa
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: simplegslb-{{ .Release.Name }}-controller-cr
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}

@@ -1,0 +1,34 @@
+.:53 {
+    forward . 1.1.1.1
+    cache 180
+    reload 5s
+    errors
+    log
+}
+
+{% for domain, regions in domain_meta.items() %}
+{% if geoip_enabled %}
+{% for region in regions %}
+{{ domain }}:53 {
+    view {{ region }} {
+        expr metadata('geoip/country/code') == '{{ region }}'
+    }
+    geoip {{ geoip_dbpath }}
+    metadata
+    file /etc/coredns/zones/db.{{ domain }}.{{ region }}
+    reload 5s
+    errors
+    log
+    loadbalance round_robin
+}
+{% endfor %}
+{% endif %}
+
+{{ domain }}:53 {
+    file /etc/coredns/zones/db.{{ domain }}.default
+    reload 5s
+    errors
+    log
+    loadbalance round_robin
+}
+{% endfor %}

@@ -1,0 +1,18 @@
+mode: controller
+interval: 10
+timeout: 2
+
+image:
+  repository: myrepo/simplegslb
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+
+controller:
+  geoip: false
+
+geoip:
+  account: ""
+  license: ""

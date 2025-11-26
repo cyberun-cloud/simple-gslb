@@ -1,0 +1,25 @@
+$ORIGIN {{ domain }}.
+$TTL 60
+
+{% set primary_ns = nameservers[0].hostname %}
+@   IN  SOA {{ primary_ns }}. admin.{{ domain }}. (
+        {{ serial }}  ; Serial
+        1d  ; Refresh
+        15m  ; Retry
+        2w  ; Expire
+        60  ; Minimum
+)
+
+{% for ns in nameservers %}
+    IN  NS  {{ ns.hostname }}.
+{% endfor %}
+
+{% for ns in nameservers %}
+{{ ns.hostname }}.  IN  A   {{ ns.address }}
+{% endfor %}
+{% for record_name, targets in records.items() %}
+{% for target in targets %}
+
+{{ record_name }}   IN  A   {{ target.address }}
+{% endfor %}
+{% endfor %}

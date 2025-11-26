@@ -1,0 +1,62 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: gslbconfigs.cyberun.cloud
+spec:
+  group: cyberun.cloud
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required: ["domain", "nameservers"]
+              properties:
+                domain:
+                  type: string
+                nameservers:
+                  type: array
+                  items:
+                    type: object
+                    required: ["hostname", "address"]
+                    properties:
+                      hostname: { type: string }
+                      address: { type: string }
+                records:
+                  type: array
+                  items:
+                    type: object
+                    required: ["name"]
+                    properties:
+                      name:
+                        type: string
+                      targets:
+                        type: array
+                        items:
+                          type: object
+                          required: ["address"]
+                          properties:
+                            address: { type: string }
+                            location: { type: string }
+                            weight: { type: integer, default: 1 }
+                            protocol:
+                              type: string
+                              enum: ["http", "tcp"]
+                              default: "http"
+                            port:
+                              type: integer
+                              default: 80
+                            path:
+                              type: string
+                              default: "/"
+  scope: Cluster
+  names:
+    plural: gslbconfigs
+    singular: gslbconfig
+    kind: GslbConfig
+    shortNames:
+      - gc

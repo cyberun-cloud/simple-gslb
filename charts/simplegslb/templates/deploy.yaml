@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simplegslb-{{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: simplegslb-{{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: simplegslb-{{ .Release.Name }}
+    spec:
+      serviceAccountName: simplegslb-{{ .Release.Name }}-sa
+      initContainers:
+        - name: init-zone
+          image: busybox:1.37
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "Initializing..."
+              mkdir -p /etc/coredns/zones
+              echo ".:53 {
+                  forward . 1.1.1.1
+                  reload 5s
+                  errors
+                  log
+              }" > /etc/coredns/Corefile
+          volumeMounts:
+            - name: shared-config
+              mountPath: /etc/coredns
+        {{- if and .Values.controller.geoip }}
+        - name: download-geoip
+          image: curlimages/curl:8.17.0
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+
+              echo "Downloading GeoIP Database..."
+              URL="https://download.maxmind.com/geoip/databases/GeoLite2-City/download?suffix=tar.gz"
+              curl -J -L -u "${ACCOUNT}:${LICENSE}" -o /tmp/geoip.tar.gz "$URL"
+
+              echo "Extracting..."
+              tar -xzf /tmp/geoip.tar.gz -C /tmp
+
+              echo "Moving database..."
+              find /tmp -name "*.mmdb" -exec mv {} /data/ \;
+
+              echo "Cleaning up..."
+              rm -rf /tmp/geoip.tar.gz
+              echo "GeoIP Database Ready!"
+          env:
+            - name: ACCOUNT
+              value: {{ .Values.geoip.account | quote }}  
+            - name: LICENSE
+              value: {{ .Values.geoip.license | quote }}
+          volumeMounts:
+            - name: geoip-data
+              mountPath: /data
+        {{- end }}
+      containers:
+        {{- if eq .Values.mode "controller" }}
+        - name: simplegslb-controller
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: MODE
+              value: {{ .Values.mode | quote }}
+            - name: INTERVAL
+              value: {{ .Values.interval | quote }}
+            - name: TIMEOUT
+              value: {{ .Values.timeout | quote }}
+            - name: GEOIP
+              value: {{ .Values.controller.geoip | quote }}
+          volumeMounts:
+            - name: shared-config
+              mountPath: /etc/coredns
+        - name: coredns
+          image: coredns/coredns:1.13.1
+          args: [ "-conf", "/etc/coredns/Corefile" ]
+          volumeMounts:
+            - name: shared-config
+              mountPath: /etc/coredns
+            - name: geoip-data
+              mountPath: /data
+              readOnly: true
+          ports:
+            - containerPort: 53
+              protocol: UDP
+            - containerPort: 53
+              protocol: TCP
+        {{- end }}
+      volumes:
+        - name: shared-config
+          emptyDir: {}
+        - name: geoip-data
+          emptyDir: {}
